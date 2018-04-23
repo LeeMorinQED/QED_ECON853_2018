@@ -137,6 +137,12 @@ jotest_sim <- ca.jo(data.frame(p,q,r), type="trace", K=2, ecdet="none", spec="lo
 summary(jotest_sim)
 
 
+# Decompose the elements of the vecm (the VECM is a Restricted Least Squares model).
+jotest_sim_rls <- cajorls(jotest_sim, r = 1, reg.number = NULL)
+attributes(jotest_sim_rls)
+jotest_sim_rls
+
+
 # Generate a series from the first cointegrating relation. 
 coint_sim_1 = 1.000*p + 1.826906*q - 1.743881*r
 plot(coint_sim_1, type="l")
