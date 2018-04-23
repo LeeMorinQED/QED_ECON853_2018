@@ -94,11 +94,11 @@ summary(denmark)
 
 # A data frame with 55 observations on the following 6 variables.
 # period Time index from 1974:Q1 until 1987:Q3.
-  # LRM Logarithm of real money, M2.
-  # LRY Logarithm of real income.
-  # LPY Logarithm of price deflator.
-  # IBO Bond rate.
-  # IDE Bank deposit rate.
+# LRM Logarithm of real money, M2.
+# LRY Logarithm of real income.
+# LPY Logarithm of price deflator.
+# IBO Bond rate.
+# IDE Bank deposit rate.
 
 
 
@@ -223,6 +223,16 @@ summary(bh5_test_2_sim)
 
 
 
+# Test a vector far from the cointegrating space. 
+H5_3_sim <- c(1, 1.8, -1.75)
+bh5_test_3_sim <- bh5lrtest(jotest_sim, H = H5_3_sim, r = 2)
+summary(bh5_test_3_sim)
+
+
+
+# Reject H_0. Note that the p-value is exactly 0, since I tested a restriction 
+# that is still far from the cointegrating space. 
+
 
 
 
@@ -230,6 +240,10 @@ summary(bh5_test_2_sim)
 # The Danish Data
 ################################################################################
 
+
+#--------------------------------------------------------------------------------
+# Estimation
+#--------------------------------------------------------------------------------
 
 
 summary(denmark)
@@ -242,6 +256,52 @@ sj_denmark_vecm <- ca.jo(sj_denmark, ecdet = "const", type="eigen",
                          K=2, spec="longrun", season=4)
 summary(sj_denmark_vecm)
 # Seems to be one cointegrating relationship.
+
+
+# Decompose the elements of the vecm.
+sj_denmark_rls <- cajorls(sj_denmark_vecm, r = 1, reg.number = NULL)
+attributes(sj_denmark_rls)
+sj_denmark_rls
+
+
+#--------------------------------------------------------------------------------
+# Postestimation
+#--------------------------------------------------------------------------------
+
+# First attempt to calculate predictions. 
+# sj_denmark_pred <- predict(sj_denmark_vecm)
+# Fails. Need to convert to VAR model first. 
+
+# Create VAR model object from VECM model. 
+sj_denmark_var <- vec2var(sj_denmark_vecm, r = 1)
+sj_denmark_var
+
+summary(sj_denmark_var)
+
+# Residuals.
+summary(sj_denmark_var$resid)
+nrow(sj_denmark_var$resid)
+nrow(sj_denmark)
+# Same number of rows, aside from lags.
+
+
+
+
+# Calculate predictions from VAR object.
+sj_denmark_pred <- predict(sj_denmark_var)
+summary(sj_denmark_pred)
+
+# See what is in the prediction object.
+attributes(sj_denmark_pred)
+sj_denmark_pred$model
+
+# Default forecast is 10 lags. 
+sj_denmark_pred$fcst
+
+# Predictions for the variables. 
+summary(sj_denmark_pred$endog)
+nrow(sj_denmark_pred$endog)
+
 
 
 
@@ -267,7 +327,7 @@ denmark[, 'DLPY'] <- c(NA, diff(denmark[, 'LPY']))
 # Select the variables in the exact form used in Johansen's example.
 sj_denmark_2 <- denmark[, c("LRM", "LRY", "DLPY", "IBO", "IDE")]
 sj_denmark_2_vecm <- ca.jo(sj_denmark_2, ecdet = "const", type="eigen", 
-                         K=2, spec="longrun", season=NULL)
+                           K=2, spec="longrun", season=NULL)
 summary(sj_denmark_2_vecm)
 # Still seems to be one cointegrating relationship.
 
@@ -283,18 +343,56 @@ summary(sj_denmark_2_vecm)
 summary(Canada)
 
 sj_canada_vecm <- ca.jo(Canada, ecdet = "const", type="eigen", 
-                           K=2, spec="longrun", season=4)
+                        K=2, spec="longrun", season=4)
 summary(sj_canada_vecm)
 # Looks like one, maybe two, cointegrating relationship(s).
 
 
 # But wait: Recall that these data had a linear trend. 
 sj_canada_vecm_tr <- ca.jo(Canada, ecdet = "trend", type="eigen", 
-                        K=2, spec="longrun", season=4)
+                           K=2, spec="longrun", season=4)
 summary(sj_canada_vecm_tr)
 # Seems to be one cointegrating relationship.
 
 
+# Decompose the elements of the vecm.
+sj_canada_rls <- cajorls(sj_canada_vecm_tr, r = 1, reg.number = NULL)
+attributes(sj_canada_rls)
+sj_canada_rls
+
+
+#--------------------------------------------------------------------------------
+# Postestimation
+#--------------------------------------------------------------------------------
+
+# Create VAR model object from VECM model. 
+sj_canada_var <- vec2var(sj_canada_vecm_tr, r = 1)
+sj_canada_var
+
+
+# Residuals.
+summary(sj_canada_var$resid)
+nrow(sj_canada_var$resid)
+nrow(Canada)
+# Same number of rows, aside from lags.
+
+
+
+
+# Calculate predictions from VAR object.
+sj_canada_pred <- predict(sj_canada_var)
+summary(sj_canada_pred)
+
+# See what is in the prediction object.
+attributes(sj_canada_pred)
+sj_canada_pred$model
+
+# Default forecast is 10 lags. 
+sj_canada_pred$fcst
+
+# Predictions for the variables. 
+summary(sj_canada_pred$endog)
+nrow(sj_canada_pred$endog)
 
 
 
